@@ -1,4 +1,4 @@
-package com.github.wwkarev.gorm.util
+package com.github.wwkarev.gorm.test
 
 import com.github.wwkarev.gorm.Model
 

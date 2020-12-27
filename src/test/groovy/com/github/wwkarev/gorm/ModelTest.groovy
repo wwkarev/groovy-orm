@@ -6,12 +6,13 @@ import com.github.wwkarev.gorm.test.models.TestAddress
 import com.github.wwkarev.gorm.test.models.TestModel
 import com.github.wwkarev.gorm.test.models.TestModelWithForeignKey
 import com.github.wwkarev.gorm.test.models.TestModelWithLo
-import com.github.wwkarev.gorm.util.TestHelper
+import com.github.wwkarev.gorm.test.TestHelper
 import groovy.sql.GroovyRowResult
 import groovy.sql.Sql
 import spock.lang.Shared
 import spock.lang.Specification
 
+import java.lang.reflect.Field
 import java.lang.reflect.Method
 
 class ModelTest extends Specification {
@@ -156,6 +157,17 @@ class ModelTest extends Specification {
         cleanup:
         new TableDropper(sql, TestModelWithForeignKey).drop()
         new TableDropper(sql, TestAddress).drop()
+    }
+    def 'test ModelPropertiesUtil.getFullFieldList()'() {
+        when:
+        Model testModel = new TestModel(null, null, null, null, null)
+        List<Field> fields = Model.getFullFieldList(testModel.getClass())
+        List<String> destFieldNames = ['id', 'firstName', 'lastName', 'age', 'birthday']
+        then:
+        assert fields.size() == destFieldNames.size()
+        fields.each{Field field ->
+            assert destFieldNames.contains(field.getName()) == true
+        }
     }
 
     def cleanup() {

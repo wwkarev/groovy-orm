@@ -1,5 +1,6 @@
-package com.github.wwkarev.gorm.util
+package com.github.wwkarev.gorm
 
+import com.github.wwkarev.gorm.CaseConverter
 import spock.lang.Specification
 
 class CaseConverterTest extends Specification {

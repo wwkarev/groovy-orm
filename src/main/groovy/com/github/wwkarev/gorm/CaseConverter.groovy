@@ -1,5 +1,8 @@
-package com.github.wwkarev.gorm.util
+package com.github.wwkarev.gorm
 
+import groovy.transform.PackageScope
+
+@PackageScope
 class CaseConverter {
     static String convertFromPascalToSnake(String pascalCaseStr) {
         return convertFromCamelToSnake(pascalCaseStr)

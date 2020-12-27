@@ -2,14 +2,13 @@ package com.github.wwkarev.gorm
 
 import com.github.wwkarev.gorm.exceptions.MultipleRecordsFoundException
 import com.github.wwkarev.gorm.exceptions.RecordNotFoundException
-import com.github.wwkarev.gorm.util.CaseConverter
-import com.sun.org.apache.xpath.internal.operations.Bool
 import groovy.sql.GroovyRowResult
 import groovy.sql.Sql
 import groovy.transform.PackageScope
 
 import java.lang.reflect.Field
 
+@PackageScope
 final class Selector extends Statement {
     Q filterQ
     List<OrderByStatement> orderByStatementList
@@ -82,7 +81,7 @@ final class Selector extends Statement {
     }
 
     private String buildStatement() {
-        List<Field> fields =  ModelPropertiesUtil.getFullFieldList(modelClass)
+        List<Field> fields =  Model.getFullFieldList(modelClass)
 
         String tableName = protoModel.getTableName()
         String valuesPart = generateSelectValuesPart(fields)

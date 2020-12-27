@@ -2,10 +2,13 @@ package com.github.wwkarev.gorm
 
 
 import com.github.wwkarev.gorm.config.Config
+import com.github.wwkarev.gorm.exceptions.UnsupportedFieldClassException
 import groovy.sql.Sql
+import groovy.transform.PackageScope
 
 import java.lang.reflect.Field
 
+@PackageScope
 final class TableCreator extends Statement {
     TableCreator(Sql sql, Class modelClass) {
         super(sql, modelClass)
@@ -18,17 +21,17 @@ final class TableCreator extends Statement {
 
     private String buildCreateStatement() {
         Config config = protoModel.config()
-        List<Field> fields =  ModelPropertiesUtil.getFullFieldList(modelClass)
+        List<Field> fields =  Model.getFullFieldList(modelClass)
 
         String tableName = protoModel.getTableName()
         String fieldsStatementRepresentation =
                 fields.collect{Field field ->
-                    return protoModel.getFieldColumnName(field.getName()) + ' ' + getFieldColumnTypeRepresentation(field)
+                    return protoModel.getFieldColumnName(field.getName()) + ' ' + getColumnTypeRepresentation(field)
                 }.join(', ')
         return "create table $tableName ($fieldsStatementRepresentation)"
     }
 
-    private String getFieldColumnTypeRepresentation(Field field) {
+    private String getColumnTypeRepresentation(Field field) {
         String fieldName = field.getName()
         Class fieldClass = field.getType()
 
@@ -55,8 +58,7 @@ final class TableCreator extends Statement {
             }
         }
         if (!representation) {
-            //TODO add to tests
-            throw new IllegalArgumentException("Illegal class of attribute $fieldName: $fieldClass")
+            throw new UnsupportedFieldClassException("Illegal class of field $fieldName: $fieldClass")
         }
         return representation
     }

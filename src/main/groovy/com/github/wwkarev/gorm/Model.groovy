@@ -1,9 +1,8 @@
 package com.github.wwkarev.gorm
 
-import com.github.wwkarev.gorm.config.ColumnConfig
+
 import com.github.wwkarev.gorm.config.Config
 import com.github.wwkarev.gorm.config.ForeignKey
-import com.github.wwkarev.gorm.util.CaseConverter
 import groovy.sql.Sql
 import groovy.transform.MapConstructor
 import groovy.transform.PackageScope
@@ -69,13 +68,35 @@ abstract class Model {
         return value
     }
 
+    @PackageScope
+    void initServiceMethods() {
+        initForeignKeyGetters()
+    }
+
+    private void initForeignKeyGetters() {
+        Config config = config()
+        Model.getFullFieldList(getClass()).each{Field field ->
+            String fieldName = field.getName()
+            ForeignKey foreignKey = config?.columns?.getAt(fieldName)?.foreignKey
+            if (foreignKey) {
+                field.setAccessible(true)
+                Object destRecordId = field.get(this)
+                if (destRecordId) {
+                    this.metaClass."get${CaseConverter.convertFromCamelToPascal(fieldName)}Model" = {->
+                        return new Selector(sql, foreignKey.dest).get(foreignKey.destColumnName, destRecordId)
+                    }
+                }
+            }
+        }
+    }
+
     private List<UpdateStatementColumnInfo> getStatementColumnInfoListWithoutId() {
         return getStatementColumnInfoList()
                 .findAll{it.fieldName != 'id'}
     }
 
     private List<UpdateStatementColumnInfo> getStatementColumnInfoList() {
-        return ModelPropertiesUtil.getFullFieldList(this.getClass()).collect { field ->
+        return Model.getFullFieldList(this.getClass()).collect { field ->
             String fieldName = field.getName()
             return new UpdateStatementColumnInfo(
                     fieldName: field.getName(),
@@ -105,25 +126,18 @@ abstract class Model {
         return updateStatementColumnInfoList.collect{it.value}
     }
 
-    @PackageScope
-    void initServiceMethods() {
-        initForeignKeyGetters()
+    static List<Field> getFullFieldList(Class cls) {
+        List<Field> fields = getFullFieldListByClass(cls, [])
+        return fields.findAll{!it.isSynthetic()}
     }
 
-    private void initForeignKeyGetters() {
-        Config config = config()
-        ModelPropertiesUtil.getFullFieldList(getClass()).each{Field field ->
-            String fieldName = field.getName()
-            ForeignKey foreignKey = config?.columns?.getAt(fieldName)?.foreignKey
-            if (foreignKey) {
-                field.setAccessible(true)
-                Object destRecordId = field.get(this)
-                if (destRecordId) {
-                    this.metaClass."get${CaseConverter.convertFromCamelToPascal(fieldName)}Model" = {->
-                        return new Selector(sql, foreignKey.dest).get(foreignKey.destColumnName, destRecordId)
-                    }
-                }
-            }
+    private static List<Field> getFullFieldListByClass(Class cls, List<Field> fields) {
+        if (cls == Model) {
+            fields = cls.declaredFields.findAll{it.getName() == 'id'} + fields
+        } else {
+            fields = cls.declaredFields + fields
+            fields = getFullFieldListByClass(cls.getSuperclass(), fields)
         }
+        return fields
     }
 }
