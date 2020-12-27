@@ -1,0 +1,8 @@
+.idea*
+*.iml
+build
+.gradle*
+gradle/*
+out/
+
+db_config.json
