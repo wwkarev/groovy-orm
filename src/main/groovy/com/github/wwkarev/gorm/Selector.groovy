@@ -3,14 +3,16 @@ package com.github.wwkarev.gorm
 import com.github.wwkarev.gorm.exceptions.MultipleRecordsFoundException
 import com.github.wwkarev.gorm.exceptions.RecordNotFoundException
 import com.github.wwkarev.gorm.util.CaseConverter
+import com.sun.org.apache.xpath.internal.operations.Bool
 import groovy.sql.GroovyRowResult
 import groovy.sql.Sql
+import groovy.transform.PackageScope
 
 import java.lang.reflect.Field
 
 final class Selector extends Statement {
     Q filterQ
-    List<String> orderByColumns
+    List<OrderByStatement> orderByStatementList
 
     Selector(Sql sql, Class modelClass) {
         super(sql, modelClass)
@@ -52,17 +54,18 @@ final class Selector extends Statement {
     Selector orderBy(List<String> fieldNames) {
         def ASC_SUFIX = /(.*)__asc$/
         def DESC_SUFIX = /(.*)__desc$/
-        orderByColumns = fieldNames.collect{String fieldName ->
-            String column = "$fieldName asc"
+        orderByStatementList = fieldNames.collect{String fieldName ->
+            String mode = "asc"
             def ascRegex = fieldName =~ ASC_SUFIX
             def descRegex = fieldName =~ DESC_SUFIX
             if (ascRegex.size() > 0) {
-                column = "${ascRegex[0][1]} asc"
+                fieldName = ascRegex[0][1]
             }
             if (descRegex.size() > 0) {
-                column = "${descRegex[0][1]} desc"
+                fieldName = descRegex[0][1]
+                mode = "desc"
             }
-            return column
+            return new OrderByStatement(fieldName: fieldName, mode: mode)
         }
         return this
     }
@@ -79,26 +82,48 @@ final class Selector extends Statement {
     }
 
     private String buildStatement() {
-        Model protoModel = getInstanceOfModel()
         List<Field> fields =  ModelPropertiesUtil.getFullFieldList(modelClass)
 
         String tableName = protoModel.getTableName()
-        String valuesPart = generateSelectValuesPart(protoModel, fields)
+        String valuesPart = generateSelectValuesPart(fields)
+        String wherePart = generateSelectWherePart()
+        String orderByPart = generateSelectOrderByPart()
 
-        String statement = "select $valuesPart from $tableName"
-        if (filterQ) {
-            statement += " where ${filterQ.getParam()}"
-        }
-        if (orderByColumns?.size() > 0) {
-            statement += " order by ${orderByColumns.join(', ')}"
-        }
+        String statement = "select $valuesPart from ${tableName}${wherePart}${orderByPart}"
         return statement
     }
 
-    private generateSelectValuesPart(Model protoModel, List<Field> fields) {
+    private String generateSelectValuesPart(List<Field> fields) {
         return fields.collect{Field field ->
-            return protoModel.getFieldColumnName(field) + ' as ' + CaseConverter.convertFromPascalToSnake(field.getName())
+            String fieldName = field.getName()
+            return protoModel.getFieldColumnName(fieldName) + ' as ' + CaseConverter.convertFromPascalToSnake(fieldName)
         }.join(', ')
+    }
+
+    private String generateSelectWherePart() {
+        String wherePart = ""
+        if (filterQ) {
+            wherePart = " where ${filterQ.getStatement()}"
+            filterQ.getSubStatementInfoList().each{ Q.WhereInfo whereInfo ->
+                wherePart = wherePart.replace(whereInfo.id, protoModel.getFieldColumnName(whereInfo.fieldName) + ' ' + whereInfo.operator)
+            }
+        }
+
+        return wherePart
+    }
+
+    private String generateSelectOrderByPart() {
+        String orderByPart = ""
+        if (orderByStatementList?.size() > 0) {
+            String orderBySubStatement = orderByStatementList
+                    .collect{OrderByStatement orderByStatement ->
+                        return "${protoModel.getFieldColumnName(orderByStatement.fieldName)} ${orderByStatement.mode}"
+                    }
+                    .join(', ')
+            orderByPart = " order by ${orderBySubStatement}"
+        }
+
+        return orderByPart
     }
 
     private List<Object> getStatementParams() {
@@ -115,9 +140,15 @@ final class Selector extends Statement {
             model."setSql"(sql)
             result.each{String column_alias, Object value ->
                 model."set${CaseConverter.convertFromSnakeToPascal(column_alias)}"(value)
-                model.initServiceMethods()
             }
+            model.initServiceMethods()
             return model
         }
+    }
+
+    @PackageScope
+    static class OrderByStatement {
+        String fieldName
+        String mode
     }
 }

@@ -8,7 +8,6 @@ final class TableDropper extends Statement {
     }
 
     void drop() {
-        Model protoModel = getInstanceOfModel()
         String tableName = protoModel.getTableName()
         String statement = "drop table $tableName"
         sql.execute(statement)

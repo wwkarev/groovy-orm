@@ -13,14 +13,19 @@ class QTest extends Specification {
         Date date_1 = new Date()
         List expressionResultList = [
                 [new Q(a: i1, b__g: s1) | ~ new Q(c__le: d1), '(a = ? and b > ?) or (not (c <= ?))', [i1, s1, d1]],
-                [new Q(aBC: b_false) & new Q(deF: i1, g__is_null: false) | new Q(f__le: date_1), '((a_b_c = ?) and (de_f = ? and g is not null)) or (f <= ?)', [b_false, i1, date_1]],
+                [new Q(aBC: b_false) & new Q(deF: i1, g__is_null: false) | new Q(f__le: date_1), '((aBC = ?) and (deF = ? and g is not null)) or (f <= ?)', [b_false, i1, date_1]],
                 [new Q(a: i1, b__g: s1) | ~ new Q(c__in: [d1, i1]), '(a = ? and b > ?) or (not (c in (?, ?)))', [i1, s1, d1, i1]],
         ]
 
 
         then:
         expressionResultList.each{
-            assert ((Q)it[0]).getParam() == it[1]
+            String statement = ((Q)it[0]).getStatement()
+            ((Q)it[0]).getSubStatementInfoList().each{ Q.WhereInfo whereInfo ->
+
+                statement = statement.replace(whereInfo.id, whereInfo.fieldName + ' ' + whereInfo.operator)
+            }
+            assert statement == it[1]
             ((Q)it[0]).getValues().eachWithIndex{ def entry, int i ->
                 if (entry.getClass() == Date) {
                     assert ((Date)it[2][i]).getTime() == ((Date)entry).getTime()

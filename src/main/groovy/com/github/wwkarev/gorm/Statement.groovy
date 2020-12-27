@@ -7,10 +7,12 @@ import groovy.transform.PackageScope
 abstract class Statement {
     protected Sql sql
     protected Class modelClass
+    protected Model protoModel
 
     Statement(Sql sql, Class modelClass) {
         this.sql = sql
         this.modelClass = modelClass
+        protoModel = getInstanceOfModel()
     }
 
     protected Model getInstanceOfModel() {

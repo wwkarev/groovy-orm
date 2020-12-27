@@ -5,10 +5,12 @@ import com.github.wwkarev.gorm.config.Config
 import com.github.wwkarev.gorm.config.ForeignKey
 import com.github.wwkarev.gorm.util.CaseConverter
 import groovy.sql.Sql
+import groovy.transform.MapConstructor
 import groovy.transform.PackageScope
 
 import java.lang.reflect.Field
 
+@MapConstructor
 abstract class Model {
     Sql sql
     Long id
@@ -24,6 +26,7 @@ abstract class Model {
         String statement = buildInsertStatement(updateStatementColumnInfoList)
         List<Object> valueList = getValueList(updateStatementColumnInfoList)
         this.id = sql.executeInsert(statement, valueList)[0][0].longValue()
+        initServiceMethods()
         return this
     }
 
@@ -37,6 +40,7 @@ abstract class Model {
         String statement = buildUpdateStatement(updateStatementColumnInfoList)
         List<Object> valueList = getValueList(updateStatementColumnInfoList)
         sql.execute(statement, valueList)
+        initServiceMethods()
         return this
     }
 
@@ -46,14 +50,12 @@ abstract class Model {
     }
 
     @PackageScope
-    String getFieldColumnName(Field field) {
-        String fieldName = field.getName()
+    String getFieldColumnName(String fieldName) {
         return config().getColumns()?.getAt(fieldName)?.columnName ?: CaseConverter.convertFromCamelToSnake(fieldName)
     }
 
     @PackageScope
-    String getFieldColumnParam(Field field) {
-        String fieldName = field.getName()
+    String getFieldColumnParam(String fieldName) {
         return config().getColumns()?.getAt(fieldName)?.lo ? 'lo_from_bytea(0, ?::bytea)' : '?'
     }
 
@@ -74,10 +76,11 @@ abstract class Model {
 
     private List<UpdateStatementColumnInfo> getStatementColumnInfoList() {
         return ModelPropertiesUtil.getFullFieldList(this.getClass()).collect { field ->
+            String fieldName = field.getName()
             return new UpdateStatementColumnInfo(
                     fieldName: field.getName(),
-                    name: getFieldColumnName(field),
-                    param: getFieldColumnParam(field),
+                    name: getFieldColumnName(fieldName),
+                    param: getFieldColumnParam(fieldName),
                     value: getFieldColumnValue(field)
             )
         }

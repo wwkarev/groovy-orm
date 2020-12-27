@@ -17,14 +17,13 @@ final class TableCreator extends Statement {
     }
 
     private String buildCreateStatement() {
-        Model protoModel = getInstanceOfModel()
         Config config = protoModel.config()
         List<Field> fields =  ModelPropertiesUtil.getFullFieldList(modelClass)
 
         String tableName = protoModel.getTableName()
         String fieldsStatementRepresentation =
                 fields.collect{Field field ->
-                    return protoModel.getFieldColumnName(field) + ' ' + getFieldColumnTypeRepresentation(field)
+                    return protoModel.getFieldColumnName(field.getName()) + ' ' + getFieldColumnTypeRepresentation(field)
                 }.join(', ')
         return "create table $tableName ($fieldsStatementRepresentation)"
     }

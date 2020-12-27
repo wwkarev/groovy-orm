@@ -1,9 +1,10 @@
 package com.github.wwkarev.gorm
 
-import com.github.wwkarev.gorm.util.CaseConverter
+import groovy.transform.PackageScope
 
 class Q {
-    private String param
+    private String statement
+    private List<WhereInfo> whereInfoList
     private List<Object> values
     private def GREATER_SUFIX = /(.*)__g$/
     private def GREATER_OR_EQUALS_SUFIX = /(.*)__ge$/
@@ -15,28 +16,34 @@ class Q {
 
     Q(Map<String, Object> map) {
         values = []
-        List<String> fields = []
+        whereInfoList = []
         map.each{fieldName, value ->
-            fields.add(getWhereStatementByField(fieldName, value))
+            whereInfoList.add(getSubStatementInfo(fieldName, value))
             if ((fieldName =~ IN_SUFIX).size() > 0) {
                 values.addAll((List)value)
             } else if ((fieldName =~ IS_NULL_SUFIX).size() == 0) {
                 values.add(value)
             }
         }
-        param = fields.join(' and ')
+        statement = whereInfoList.collect{it.id}.join(' and ')
     }
 
-    String getParam() {
-        return param
+    String getStatement() {
+        return statement
+    }
+
+    List<WhereInfo> getSubStatementInfoList() {
+        return whereInfoList
     }
 
     List<Object> getValues() {
         return values
     }
 
-    private String getWhereStatementByField(String fieldName, Object value) {
-        String operator = "= ?"
+    private WhereInfo getSubStatementInfo(String fieldName, Object value) {
+        String id = UUID.randomUUID().toString()
+        String operator = '= ?'
+
         def greaterRegex = fieldName =~ GREATER_SUFIX
         def greaterOrEqualsRegex = fieldName =~ GREATER_OR_EQUALS_SUFIX
         def lessRegex = fieldName =~ LESS_SUFIX
@@ -67,23 +74,32 @@ class Q {
             fieldName = inRegex[0][1]
         }
 
-        return  CaseConverter.convertFromCamelToSnake(fieldName) + " $operator"
+        return new WhereInfo(id: id, fieldName: fieldName, operator: operator)
     }
 
     Q and(Q q) {
-        param = "($param) and (${q.getParam()})"
+        statement = "($statement) and (${q.getStatement()})"
+        whereInfoList.addAll(q.getSubStatementInfoList())
         values.addAll(q.getValues())
         return this
     }
 
     Q or(Q q) {
-        param = "($param) or (${q.getParam()})"
+        statement = "($statement) or (${q.getStatement()})"
+        whereInfoList.addAll(q.getSubStatementInfoList())
         values.addAll(q.getValues())
         return this
     }
 
     Q bitwiseNegate() {
-        param = "not ($param)"
+        statement = "not ($statement)"
         return this
+    }
+
+    @PackageScope
+    static class WhereInfo {
+        String id
+        String fieldName
+        String operator
     }
 }

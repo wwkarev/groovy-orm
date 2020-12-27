@@ -15,6 +15,15 @@ class TestModelWithForeignKey extends Model {
     Date birthday
     String address
 
+    TestModelWithForeignKey(Sql sql, String firstName, String lastName, Integer age, Date birthday, String address) {
+        super(sql)
+        this.firstName = firstName
+        this.lastName = lastName
+        this.age = age
+        this.birthday = birthday
+        this.address = address
+    }
+
     @Override
     Config config() {
         return new Config(
@@ -25,6 +34,4 @@ class TestModelWithForeignKey extends Model {
                 ]
         )
     }
-
-    TestAddress getAddressModel() {}
 }
