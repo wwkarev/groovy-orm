@@ -17,6 +17,7 @@ Model - simple POJO class extended from Model class. Legal field's classes:
 - Double, Float (double precision)
 - Date (timestamptz)
 
+Example:
 
     class Worker extends Model {
         String firstName
