@@ -4,9 +4,9 @@ import com.github.wwkarev.gorm.exceptions.MultipleRecordsFoundException
 import com.github.wwkarev.gorm.exceptions.RecordNotFoundException
 import com.github.wwkarev.gorm.test.db.C
 import com.github.wwkarev.gorm.test.db.DBConfig
-import com.github.wwkarev.gorm.test.models.TestAddress
-import com.github.wwkarev.gorm.test.models.TestModel
-import com.github.wwkarev.gorm.test.models.TestModelWithForeignKey
+import com.github.wwkarev.gorm.test.models.Address
+import com.github.wwkarev.gorm.test.models.Worker
+import com.github.wwkarev.gorm.test.models.WorkerWithForeignKey
 import groovy.sql.Sql
 import spock.lang.Shared
 import spock.lang.Specification
@@ -21,9 +21,9 @@ class SelectorTest extends Specification {
         DBConfig dbConfig = DBConfig.load(C.DB_CONFIG)
         sql = Sql.newInstance(dbConfig.host, dbConfig.user, dbConfig.password, dbConfig.driver)
 
-        new TableCreator(sql, TestAddress).create()
-        new TableCreator(sql, TestModelWithForeignKey).create()
-        new TableCreator(sql, TestModel).create()
+        new TableCreator(sql, Address).create()
+        new TableCreator(sql, WorkerWithForeignKey).create()
+        new TableCreator(sql, Worker).create()
     }
 
     def "test selector. Statement."() {
@@ -35,19 +35,19 @@ class SelectorTest extends Specification {
         statement == result
         where:
         selector|result
-        new Selector(sql, TestModel) | 'select id as id, first_name as first_name, family_name as last_name, age as age, birthday as birthday from test_model'
-        new Selector(sql, TestModel).where(new Q(a: 1) | ~ new Q(b__is_null: true, cD__le: '3')).orderBy(['age__desc', 'birthday', 'first_name__asc']) | 'select id as id, first_name as first_name, family_name as last_name, age as age, birthday as birthday from test_model where (a = ?) or (not (b is null and c_d <= ?)) order by age desc, birthday asc, first_name asc'
-        new Selector(sql, TestModel).where('c__le', 1)                                                                                                 | 'select id as id, first_name as first_name, family_name as last_name, age as age, birthday as birthday from test_model where c <= ?'
+        new Selector(sql, Worker)                                                                                                                   | 'select id as id, first_name as first_name, family_name as last_name, age as age, birthday as birthday from worker'
+        new Selector(sql, Worker).where(new Q(a: 1) | ~ new Q(b__is_null: true, cD__le: '3')).orderBy(['age__desc', 'birthday', 'first_name__asc']) | 'select id as id, first_name as first_name, family_name as last_name, age as age, birthday as birthday from worker where (a = ?) or (not (b is null and c_d <= ?)) order by age desc, birthday asc, first_name asc'
+        new Selector(sql, Worker).where('c__le', 1)                                                                                                 | 'select id as id, first_name as first_name, family_name as last_name, age as age, birthday as birthday from worker where c <= ?'
     }
 
     def "test selector. Order by DESC."() {
         when:
-        sql.executeInsert("insert into test_model (family_name, birthday, age) values('John', '1990-01-01', 10)")
-        sql.executeInsert("insert into test_model (family_name, age) values('Michael', 30)")
-        sql.executeInsert("insert into test_model (family_name, age) values('Joe', 50)")
-        sql.executeInsert("insert into test_model (family_name, age) values('Dan', 20)")
+        sql.executeInsert("insert into worker (family_name, birthday, age) values('John', '1990-01-01', 10)")
+        sql.executeInsert("insert into worker (family_name, age) values('Michael', 30)")
+        sql.executeInsert("insert into worker (family_name, age) values('Joe', 50)")
+        sql.executeInsert("insert into worker (family_name, age) values('Dan', 20)")
 
-        List<TestModel> testModels = new Selector(sql, TestModel).orderBy('lastName__desc').filter('age__le', 30)
+        List<Worker> testModels = new Selector(sql, Worker).orderBy('lastName__desc').filter('age__le', 30)
         then:
         testModels[0].lastName == 'Michael'
         testModels[1].lastName == 'John'
@@ -56,12 +56,12 @@ class SelectorTest extends Specification {
 
     def "test selector. Order by ASC."() {
         when:
-        sql.executeInsert("insert into test_model (family_name, birthday, age) values('John', '1990-01-01', 10)")
-        sql.executeInsert("insert into test_model (family_name, age) values('Michael', 30)")
-        sql.executeInsert("insert into test_model (family_name, age) values('Joe', 50)")
-        sql.executeInsert("insert into test_model (family_name, age) values('Dan', 20)")
+        sql.executeInsert("insert into worker (family_name, birthday, age) values('John', '1990-01-01', 10)")
+        sql.executeInsert("insert into worker (family_name, age) values('Michael', 30)")
+        sql.executeInsert("insert into worker (family_name, age) values('Joe', 50)")
+        sql.executeInsert("insert into worker (family_name, age) values('Dan', 20)")
 
-        List<TestModel> testModels = new Selector(sql, TestModel).orderBy('lastName').filter('age__le', 30)
+        List<Worker> testModels = new Selector(sql, Worker).orderBy('lastName').filter('age__le', 30)
         then:
         testModels[0].lastName == 'Dan'
         testModels[1].lastName == 'John'
@@ -73,11 +73,11 @@ class SelectorTest extends Specification {
         Long id1 = sql.executeInsert("insert into test_fk (first_name, birthday, age) values('John', '1990-01-01', 50)")[0][0].longValue()
         Long id2 = sql.executeInsert("insert into test_fk (first_name, age) values('Ben', 30)")[0][0].longValue()
         Long id3 = sql.executeInsert("insert into test_fk (first_name, age) values('Ben', 30)")[0][0].longValue()
-        Long id4 = sql.executeInsert("insert into test_address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
-//        sql.executeInsert("insert into test_address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
+        Long id4 = sql.executeInsert("insert into address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
+//        sql.executeInsert("insert into address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
         Long id5 = sql.executeInsert("insert into test_fk (first_name, age, address_id) values('John', 10, 'Germany')")[0][0].longValue()
 
-        List<TestModelWithForeignKey> testModels = new Selector(sql, TestModelWithForeignKey).filter(new Q(age__le: 10))
+        List<WorkerWithForeignKey> testModels = new Selector(sql, WorkerWithForeignKey).filter(new Q(age__le: 10))
         println(testModels)
         testModels.each{
             println("name: ${it.firstName}")
@@ -89,7 +89,7 @@ class SelectorTest extends Specification {
 
     def "test selector. Get. Record Not Found."() {
         when:
-        new Selector(sql, TestAddress).get(new Q(city: 'Berlin'))
+        new Selector(sql, Address).get(new Q(city: 'Berlin'))
 
         then:
         thrown RecordNotFoundException
@@ -97,10 +97,10 @@ class SelectorTest extends Specification {
 
     def "test selector. Get. Multiple destination records."() {
         when:
-        sql.executeInsert("insert into test_address (country, city, street) values('Germany', 'Berlin', 'Street #1')")
-        sql.executeInsert("insert into test_address (country, city, street) values('Germany', 'Berlin', 'Street #1')")
+        sql.executeInsert("insert into address (country, city, street) values('Germany', 'Berlin', 'Street #1')")
+        sql.executeInsert("insert into address (country, city, street) values('Germany', 'Berlin', 'Street #1')")
 
-        new Selector(sql, TestAddress).get(new Q(city: 'Berlin'))
+        new Selector(sql, Address).get(new Q(city: 'Berlin'))
 
         then:
         thrown MultipleRecordsFoundException
@@ -108,11 +108,11 @@ class SelectorTest extends Specification {
 
     def "test selector. Foreign Key. Legal."() {
         when:
-        Long addressId = sql.executeInsert("insert into test_address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
+        Long addressId = sql.executeInsert("insert into address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
         sql.executeInsert("insert into test_fk (first_name, family_name, age, address_id) values('Ben', 'Thor', 30, 'Germany')")
 
-        TestModelWithForeignKey modelWithForeignKey = new Selector(sql, TestModelWithForeignKey).get(new Q(lastName: 'Thor'))
-        TestAddress testAddress = modelWithForeignKey.getAddressModel()
+        WorkerWithForeignKey modelWithForeignKey = new Selector(sql, WorkerWithForeignKey).get(new Q(lastName: 'Thor'))
+        Address testAddress = modelWithForeignKey.getAddressModel()
 
         then:
         testAddress.id == addressId
@@ -122,9 +122,9 @@ class SelectorTest extends Specification {
     }
 
     def cleanup() {
-        new TableDropper(sql, TestModelWithForeignKey).drop()
-        new TableDropper(sql, TestAddress).drop()
-        new TableDropper(sql, TestModel).drop()
+        new TableDropper(sql, WorkerWithForeignKey).drop()
+        new TableDropper(sql, Address).drop()
+        new TableDropper(sql, Worker).drop()
 
         sql.close()
     }

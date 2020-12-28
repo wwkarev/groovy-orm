@@ -1,10 +1,10 @@
 package com.github.wwkarev.gorm
 
-import com.github.wwkarev.gorm.config.Config
+
 import com.github.wwkarev.gorm.test.db.C
 import com.github.wwkarev.gorm.test.db.DBConfig
-import com.github.wwkarev.gorm.test.models.TestModel
-import com.github.wwkarev.gorm.test.models.TestModelWithCustomTableName
+import com.github.wwkarev.gorm.test.models.Worker
+import com.github.wwkarev.gorm.test.models.WorkerWithCustomTableName
 import groovy.sql.Sql
 import spock.lang.Shared
 import spock.lang.Specification
@@ -22,30 +22,30 @@ class TableCreatorTest extends Specification {
 
     def "test TableCreator"() {
         when:
-        new TableCreator(sql, TestModel).create()
-        sql.rows("select * from test_model")
-        new TableDropper(sql, TestModel).drop()
+        new TableCreator(sql, Worker).create()
+        sql.rows("select * from worker")
+        new TableDropper(sql, Worker).drop()
         then:
         notThrown Exception
     }
 
     def "test TableCreator. Custom table name"() {
         when:
-        new TableCreator(sql, TestModelWithCustomTableName).create()
-        sql.rows("select * from test_model_custom")
-        new TableDropper(sql, TestModelWithCustomTableName).drop()
+        new TableCreator(sql, WorkerWithCustomTableName).create()
+        sql.rows("select * from worker_custom")
+        new TableDropper(sql, WorkerWithCustomTableName).drop()
         then:
         notThrown Exception
     }
 
     def "test TableCreator. Statement"() {
         when:
-        TableCreator tableCreator = new TableCreator(sql, TestModel)
+        TableCreator tableCreator = new TableCreator(sql, Worker)
         Method method = tableCreator.getClass().getDeclaredMethod('buildCreateStatement')
         method.setAccessible(true)
         String statement = method.invoke(tableCreator)
         then:
-        statement == 'create table test_model (id serial primary key, first_name text, family_name text, age integer, birthday timestamptz)'
+        statement == 'create table worker (id serial primary key, first_name text, family_name text, age integer, birthday timestamptz)'
     }
 
     def cleanup() {

@@ -6,7 +6,7 @@ import groovy.sql.Sql
 import groovy.transform.InheritConstructors
 
 @InheritConstructors
-class TestAddress extends Model {
+class Address extends Model {
     String country
     String city
     String street

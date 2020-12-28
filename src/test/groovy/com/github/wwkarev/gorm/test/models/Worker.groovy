@@ -1,16 +1,17 @@
 package com.github.wwkarev.gorm.test.models
 
 import com.github.wwkarev.gorm.Model
+import com.github.wwkarev.gorm.config.ColumnConfig
 import com.github.wwkarev.gorm.config.Config
 import groovy.sql.Sql
 
-class TestModelWithCustomTableName extends Model {
+class Worker extends Model {
     String firstName
     String lastName
     Integer age
     Date birthday
 
-    TestModelWithCustomTableName(Sql sql, String firstName, String lastName, Integer age, Date birthday) {
+    Worker(Sql sql, String firstName, String lastName, Integer age, Date birthday) {
         super(sql)
         this.firstName = firstName
         this.lastName = lastName
@@ -20,6 +21,10 @@ class TestModelWithCustomTableName extends Model {
 
     @Override
     Config config() {
-        return new Config(tableName: 'test_model_custom')
+        return new Config(
+                columns: [
+                        lastName: new ColumnConfig(columnName: 'family_name')
+                ]
+        )
     }
 }

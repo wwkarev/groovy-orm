@@ -2,10 +2,10 @@ package com.github.wwkarev.gorm
 
 import com.github.wwkarev.gorm.test.db.C
 import com.github.wwkarev.gorm.test.db.DBConfig
-import com.github.wwkarev.gorm.test.models.TestAddress
-import com.github.wwkarev.gorm.test.models.TestModel
-import com.github.wwkarev.gorm.test.models.TestModelWithForeignKey
-import com.github.wwkarev.gorm.test.models.TestModelWithLo
+import com.github.wwkarev.gorm.test.models.Address
+import com.github.wwkarev.gorm.test.models.Worker
+import com.github.wwkarev.gorm.test.models.WorkerWithForeignKey
+import com.github.wwkarev.gorm.test.models.WorkerWithLo
 import com.github.wwkarev.gorm.test.TestHelper
 import groovy.sql.GroovyRowResult
 import groovy.sql.Sql
@@ -26,13 +26,13 @@ class ModelTest extends Specification {
 
     def "test insert"() {
         when:
-        new TableCreator(sql, TestModelWithLo).create()
-        TestModelWithLo model = TestModelWithLo.getInstance(sql)
+        new TableCreator(sql, WorkerWithLo).create()
+        WorkerWithLo model = WorkerWithLo.getInstance(sql)
         model.insert()
 
-        GroovyRowResult rowResult = sql.firstRow("select * from test_model_with_lo where id = ${model.id}")
+        GroovyRowResult rowResult = sql.firstRow("select * from worker_with_lo where id = ${model.id}")
 
-        new TableDropper(sql, TestModelWithLo).drop()
+        new TableDropper(sql, WorkerWithLo).drop()
         then:
         model.firstName == rowResult.first_name
         model.lastName == rowResult.family_name
@@ -43,7 +43,7 @@ class ModelTest extends Specification {
 
     def "test insert statement"() {
         when:
-        Model model = TestModelWithLo.getInstance(sql)
+        Model model = WorkerWithLo.getInstance(sql)
 
         Class modelClass = TestHelper.getModelClass(model.getClass())
 
@@ -59,7 +59,7 @@ class ModelTest extends Specification {
         method.setAccessible(true)
         List<Object> valueList =  method.invoke(model, updateStatementColumnInfoList)
         then:
-        statement == 'insert into test_model_with_lo (first_name, family_name, age, birthday, bio) values(?, ?, ?, ?, lo_from_bytea(0, ?::bytea))'
+        statement == 'insert into worker_with_lo (first_name, family_name, age, birthday, bio) values(?, ?, ?, ?, lo_from_bytea(0, ?::bytea))'
         valueList[0] == model.firstName
         valueList[1] == model.lastName
         valueList[2] == model.age
@@ -69,17 +69,17 @@ class ModelTest extends Specification {
 
     def "test update"() {
         when:
-        new TableCreator(sql, TestModelWithLo).create()
+        new TableCreator(sql, WorkerWithLo).create()
 
-        Long id = sql.executeInsert("insert into test_model_with_lo (first_name) values(null)")[0][0].longValue()
+        Long id = sql.executeInsert("insert into worker_with_lo (first_name) values(null)")[0][0].longValue()
 
-        TestModelWithLo model = TestModelWithLo.getInstance(sql)
+        WorkerWithLo model = WorkerWithLo.getInstance(sql)
         model.id = id
         model.update()
 
-        GroovyRowResult rowResult = sql.firstRow("select * from test_model_with_lo where id = ${model.id}")
+        GroovyRowResult rowResult = sql.firstRow("select * from worker_with_lo where id = ${model.id}")
 
-        new TableDropper(sql, TestModelWithLo).drop()
+        new TableDropper(sql, WorkerWithLo).drop()
         then:
         model.firstName == rowResult.first_name
         model.lastName == rowResult.family_name
@@ -91,7 +91,7 @@ class ModelTest extends Specification {
     def "test update statement"() {
         when:
         Long modelId = 0
-        Model model = TestModelWithLo.getInstance(sql)
+        Model model = WorkerWithLo.getInstance(sql)
         model.id = modelId
 
         Class modelClass = TestHelper.getModelClass(model.getClass())
@@ -108,7 +108,7 @@ class ModelTest extends Specification {
         method.setAccessible(true)
         List<Object> valueList =  method.invoke(model, updateStatementColumnInfoList)
         then:
-        statement == "update test_model_with_lo set first_name = ?, family_name = ?, age = ?, birthday = ?, bio = lo_from_bytea(0, ?::bytea) where id = $modelId"
+        statement == "update worker_with_lo set first_name = ?, family_name = ?, age = ?, birthday = ?, bio = lo_from_bytea(0, ?::bytea) where id = $modelId"
         valueList[0] == model.firstName
         valueList[1] == model.lastName
         valueList[2] == model.age
@@ -118,13 +118,13 @@ class ModelTest extends Specification {
 
     def "test insert foreignKey"() {
         setup:
-        new TableCreator(sql, TestAddress).create()
-        new TableCreator(sql, TestModelWithForeignKey).create()
+        new TableCreator(sql, Address).create()
+        new TableCreator(sql, WorkerWithForeignKey).create()
 
         when:
-        Long addressId = sql.executeInsert("insert into test_address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
-        TestModelWithForeignKey testModelWithForeignKey = new TestModelWithForeignKey(sql, "John", "Doe", null, null, "Germany").insert()
-        TestAddress testAddress = testModelWithForeignKey.getAddressModel()
+        Long addressId = sql.executeInsert("insert into address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
+        WorkerWithForeignKey testModelWithForeignKey = new WorkerWithForeignKey(sql, "John", "Doe", null, null, "Germany").insert()
+        Address testAddress = testModelWithForeignKey.getAddressModel()
         then:
         testAddress.id == addressId
         testAddress.country == "Germany"
@@ -132,22 +132,22 @@ class ModelTest extends Specification {
         testAddress.street == "Street #1"
 
         cleanup:
-        new TableDropper(sql, TestModelWithForeignKey).drop()
-        new TableDropper(sql, TestAddress).drop()
+        new TableDropper(sql, WorkerWithForeignKey).drop()
+        new TableDropper(sql, Address).drop()
     }
 
     def "test update foreignKey"() {
         setup:
-        new TableCreator(sql, TestAddress).create()
-        new TableCreator(sql, TestModelWithForeignKey).create()
+        new TableCreator(sql, Address).create()
+        new TableCreator(sql, WorkerWithForeignKey).create()
 
         when:
-        Long addressId = sql.executeInsert("insert into test_address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
+        Long addressId = sql.executeInsert("insert into address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
         sql.executeInsert("insert into test_fk (first_name, age) values('John', 10)")[0][0].longValue()
-        TestModelWithForeignKey testModelWithForeignKey = new Selector(sql, TestModelWithForeignKey).get("first_name", "John")
+        WorkerWithForeignKey testModelWithForeignKey = new Selector(sql, WorkerWithForeignKey).get("first_name", "John")
         testModelWithForeignKey.address = "Germany"
         testModelWithForeignKey.update()
-        TestAddress testAddress = testModelWithForeignKey.getAddressModel()
+        Address testAddress = testModelWithForeignKey.getAddressModel()
         then:
         testAddress.id == addressId
         testAddress.country == "Germany"
@@ -155,12 +155,12 @@ class ModelTest extends Specification {
         testAddress.street == "Street #1"
 
         cleanup:
-        new TableDropper(sql, TestModelWithForeignKey).drop()
-        new TableDropper(sql, TestAddress).drop()
+        new TableDropper(sql, WorkerWithForeignKey).drop()
+        new TableDropper(sql, Address).drop()
     }
     def 'test ModelPropertiesUtil.getFullFieldList()'() {
         when:
-        Model testModel = new TestModel(null, null, null, null, null)
+        Model testModel = new Worker(null, null, null, null, null)
         List<Field> fields = Model.getFullFieldList(testModel.getClass())
         List<String> destFieldNames = ['id', 'firstName', 'lastName', 'age', 'birthday']
         then:

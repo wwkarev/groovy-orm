@@ -8,14 +8,14 @@ import groovy.sql.Sql
 import groovy.transform.InheritConstructors
 
 @InheritConstructors
-class TestModelWithForeignKey extends Model {
+class WorkerWithForeignKey extends Model {
     String firstName
     String lastName
     Integer age
     Date birthday
     String address
 
-    TestModelWithForeignKey(Sql sql, String firstName, String lastName, Integer age, Date birthday, String address) {
+    WorkerWithForeignKey(Sql sql, String firstName, String lastName, Integer age, Date birthday, String address) {
         super(sql)
         this.firstName = firstName
         this.lastName = lastName
@@ -30,7 +30,7 @@ class TestModelWithForeignKey extends Model {
                 tableName: 'test_fk',
                 columns: [
                         lastName: new ColumnConfig(columnName: 'family_name'),
-                        address: new ColumnConfig(columnName: 'address_id', foreignKey: new ForeignKey(dest: TestAddress, destColumnName: 'country'))
+                        address: new ColumnConfig(columnName: 'address_id', foreignKey: new ForeignKey(dest: Address, destColumnName: 'country'))
                 ]
         )
     }

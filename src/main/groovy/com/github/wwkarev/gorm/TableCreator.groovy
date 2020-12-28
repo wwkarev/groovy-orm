@@ -43,10 +43,10 @@ final class TableCreator extends Statement {
                 case String:
                     representation = "text"
                     break
-                case [Integer]:
+                case Integer:
                     representation = "integer"
                     break
-                case [Integer, Long]:
+                case Long:
                     representation = "bigint"
                     break
                 case [Double, Float]:
