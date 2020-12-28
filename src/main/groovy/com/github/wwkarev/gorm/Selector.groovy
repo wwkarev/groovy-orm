@@ -8,6 +8,11 @@ import groovy.transform.PackageScope
 
 import java.lang.reflect.Field
 
+
+/**
+ * Provides SELECT functionality
+ * @author Vitalii Karev (wwkarev)
+ */
 @PackageScope
 final class Selector extends Statement {
     Q filterQ

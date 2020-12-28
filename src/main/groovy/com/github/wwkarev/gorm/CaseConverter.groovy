@@ -2,6 +2,10 @@ package com.github.wwkarev.gorm
 
 import groovy.transform.PackageScope
 
+/**
+ * Converts string from one case to another
+ * @author Vitalii Karev (wwkarev)
+ */
 @PackageScope
 class CaseConverter {
     static String convertFromPascalToSnake(String pascalCaseStr) {

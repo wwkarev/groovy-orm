@@ -2,6 +2,10 @@ package com.github.wwkarev.gorm
 
 import groovy.transform.PackageScope
 
+/**
+ * Q objects is used to build complex where query
+ * @author Vitalii Karev (wwkarev)
+ */
 class Q {
     private String statement
     private List<WhereInfo> whereInfoList

@@ -9,6 +9,10 @@ import groovy.transform.PackageScope
 
 import java.lang.reflect.Field
 
+/**
+ * Base model class
+ * @author Vitalii Karev (wwkarev)
+ */
 @MapConstructor
 abstract class Model {
     Sql sql

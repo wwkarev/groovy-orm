@@ -8,6 +8,10 @@ import groovy.transform.PackageScope
 
 import java.lang.reflect.Field
 
+/**
+ * Provides CREATE TABLE functionality
+ * @author Vitalii Karev (wwkarev)
+ */
 @PackageScope
 final class TableCreator extends Statement {
     TableCreator(Sql sql, Class modelClass) {

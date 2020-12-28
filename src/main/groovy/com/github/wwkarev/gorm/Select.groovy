@@ -1,5 +1,9 @@
 package com.github.wwkarev.gorm
 
+/**
+ * Provides SELECT functionality
+ * @author Vitalii Karev (wwkarev)
+ */
 class Select {
     Model get(sql, Class modelClass, String fieldName, value) {
         return new Selector(sql, modelClass).get(fieldName, value)

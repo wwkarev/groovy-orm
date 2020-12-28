@@ -3,6 +3,10 @@ package com.github.wwkarev.gorm
 import groovy.sql.Sql
 import groovy.transform.PackageScope
 
+/**
+ * Base class for statement classes
+ * @author Vitalii Karev (wwkarev)
+ */
 @PackageScope
 abstract class Statement {
     protected Sql sql
