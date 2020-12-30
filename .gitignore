@@ -6,3 +6,4 @@ gradle/*
 out/
 
 db_config.json
+deploy.sh
