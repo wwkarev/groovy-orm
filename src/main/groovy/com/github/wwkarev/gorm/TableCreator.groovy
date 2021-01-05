@@ -19,11 +19,11 @@ final class TableCreator extends Statement {
     }
 
     void create() {
-        String statement = buildCreateStatement()
+        String statement = buildStatement()
         sql.execute(statement)
     }
 
-    private String buildCreateStatement() {
+    private String buildStatement() {
         Config config = protoModel.config()
         List<Field> fields =  Model.getFullFieldList(modelClass)
 
