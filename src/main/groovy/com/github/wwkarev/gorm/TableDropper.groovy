@@ -13,9 +13,17 @@ final class TableDropper extends Statement {
         super(sql, modelClass)
     }
 
-    void drop() {
+    void drop(Boolean cascade) {
+        String statement = buildStatement(cascade)
+        sql.execute(statement)
+    }
+
+    private String buildStatement(Boolean cascade) {
         String tableName = protoModel.getTableName()
         String statement = "drop table $tableName"
-        sql.execute(statement)
+        if (cascade) {
+            statement += " cascade"
+        }
+        return  statement
     }
 }
