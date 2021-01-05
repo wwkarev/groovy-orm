@@ -69,6 +69,44 @@ class TableCreatorTest extends Specification {
         statement == 'drop table worker cascade'
     }
 
+    def "test TableTruncater"() {
+        setup:
+        new TableCreator(sql, Worker).create()
+        when:
+        Worker worker = new Worker(sql, UUID.randomUUID().toString(), UUID.randomUUID().toString(), 0, new Date())
+        worker.insert()
+        worker.id = null
+        worker.insert()
+        assert sql.rows("select * from worker").size() == 2
+        new TableTruncater(sql, Worker).truncate()
+        Long size = sql.rows("select * from worker").size()
+        then:
+        assert size == 0
+        notThrown Exception
+        cleanup:
+        new TableDropper(sql, Worker).drop()
+    }
+
+    def "test TableTruncater. Statement."() {
+        when:
+        TableTruncater tableTruncater = new TableTruncater(sql, Worker)
+        Method method = tableTruncater.getClass().getDeclaredMethod('buildStatement', Boolean)
+        method.setAccessible(true)
+        String statement = method.invoke(tableTruncater, false)
+        then:
+        statement == 'truncate worker'
+    }
+
+    def "test TableTruncater. Statement cascade"() {
+        when:
+        TableTruncater tableTruncater = new TableTruncater(sql, Worker)
+        Method method = tableTruncater.getClass().getDeclaredMethod('buildStatement', Boolean)
+        method.setAccessible(true)
+        String statement = method.invoke(tableTruncater, true)
+        then:
+        statement == 'truncate worker cascade'
+    }
+
     def cleanup() {
         sql.close()
     }
