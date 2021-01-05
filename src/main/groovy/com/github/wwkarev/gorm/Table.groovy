@@ -11,8 +11,8 @@ final class Table {
         new TableCreator(sql, modelClass).create()
     }
 
-    static void drop(Sql sql, Class modelClass) {
-        new TableDropper(sql, modelClass).drop()
+    static void drop(Sql sql, Class modelClass, Boolean cascade = true) {
+        new TableDropper(sql, modelClass).drop(cascade)
     }
 
     static void truncate(Sql sql, Class modelClass, Boolean cascade = true) {

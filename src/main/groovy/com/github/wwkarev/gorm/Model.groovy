@@ -49,17 +49,17 @@ abstract class Model {
 
     @PackageScope
     String getTableName() {
-        return config().tableName ?: CaseConverter.convertFromPascalToSnake(this.getClass().getSimpleName())
+        return config()?.tableName ?: CaseConverter.convertFromPascalToSnake(this.getClass().getSimpleName())
     }
 
     @PackageScope
     String getFieldColumnName(String fieldName) {
-        return config().getColumns()?.getAt(fieldName)?.columnName ?: CaseConverter.convertFromCamelToSnake(fieldName)
+        return config()?.getColumns()?.getAt(fieldName)?.columnName ?: CaseConverter.convertFromCamelToSnake(fieldName)
     }
 
     @PackageScope
     String getFieldColumnParam(String fieldName) {
-        return config().getColumns()?.getAt(fieldName)?.lo ? 'lo_from_bytea(0, ?::bytea)' : '?'
+        return config()?.getColumns()?.getAt(fieldName)?.lo ? 'lo_from_bytea(0, ?::bytea)' : '?'
     }
 
     @PackageScope
@@ -87,7 +87,7 @@ abstract class Model {
                 Object destRecordId = field.get(this)
                 if (destRecordId) {
                     this.metaClass."get${CaseConverter.convertFromCamelToPascal(fieldName)}Model" = {->
-                        return new Selector(sql, foreignKey.dest).get(foreignKey.destColumnName, destRecordId)
+                        return new Selector(sql, foreignKey.dest).get(foreignKey.destColumnName ?: 'id', destRecordId)
                     }
                 }
             }
