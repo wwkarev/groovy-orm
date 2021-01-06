@@ -86,7 +86,8 @@ abstract class Model {
                 field.setAccessible(true)
                 Object destRecordId = field.get(this)
                 if (destRecordId) {
-                    this.metaClass."get${CaseConverter.convertFromCamelToPascal(fieldName)}Model" = {->
+                    String getterName = foreignKey.getterName ?: "get${CaseConverter.convertFromCamelToPascal(fieldName)}Model"
+                    this.metaClass."$getterName" = {->
                         return new Selector(sql, foreignKey.dest).get(foreignKey.destColumnName ?: 'id', destRecordId)
                     }
                 }

@@ -7,6 +7,7 @@ import com.github.wwkarev.gorm.test.models.Worker
 import com.github.wwkarev.gorm.test.models.WorkerWithForeignKey
 import com.github.wwkarev.gorm.test.models.WorkerWithLo
 import com.github.wwkarev.gorm.test.TestHelper
+import com.sun.corba.se.spi.orbutil.threadpool.Work
 import groovy.sql.GroovyRowResult
 import groovy.sql.Sql
 import spock.lang.Shared
@@ -119,20 +120,28 @@ class ModelTest extends Specification {
     def "test insert foreignKey"() {
         setup:
         new TableCreator(sql, Address).create()
+        new TableCreator(sql, Worker).create()
         new TableCreator(sql, WorkerWithForeignKey).create()
 
         when:
         Long addressId = sql.executeInsert("insert into address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
-        WorkerWithForeignKey testModelWithForeignKey = new WorkerWithForeignKey(sql, "John", "Doe", null, null, "Germany").insert()
+        Long managerId = sql.executeInsert("insert into worker (first_name, family_name, age) values('George', 'Black', 50)")[0][0].longValue()
+        WorkerWithForeignKey testModelWithForeignKey = new WorkerWithForeignKey(sql, "John", "Doe", null, null, "Germany", managerId).insert()
         Address testAddress = testModelWithForeignKey.getAddressModel()
+        Worker testManager = testModelWithForeignKey.getManager()
         then:
         testAddress.id == addressId
         testAddress.country == "Germany"
         testAddress.city == "Berlin"
         testAddress.street == "Street #1"
+        testManager.id == addressId
+        testManager.firstName == "George"
+        testManager.lastName == "Black"
+        testManager.age == 50
 
         cleanup:
         new TableDropper(sql, WorkerWithForeignKey).drop()
+        new TableDropper(sql, Worker).drop()
         new TableDropper(sql, Address).drop()
     }
 
@@ -141,7 +150,7 @@ class ModelTest extends Specification {
         new TableCreator(sql, Address).create()
         new TableCreator(sql, WorkerWithForeignKey).create()
 
-        when:
+        when:Address
         Long addressId = sql.executeInsert("insert into address (country, city, street) values('Germany', 'Berlin', 'Street #1')")[0][0].longValue()
         sql.executeInsert("insert into test_fk (first_name, age) values('John', 10)")[0][0].longValue()
         WorkerWithForeignKey testModelWithForeignKey = new Selector(sql, WorkerWithForeignKey).get("first_name", "John")

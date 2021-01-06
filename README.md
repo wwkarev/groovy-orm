@@ -123,7 +123,7 @@ You can use `filter()` and `get()` methods (`where()` + `select()`).
     List<Worker> worker = Select.orderBy(sql, Worker, 'first_name').filter('bio__is_null', true)
 
 groovy-orm provides access to linked models. You can describe link using ForeignKey in Config.
-`getFieldNameModel()` is used to access to linked model. 
+`getFieldNameModel()`or `getterName` is used to access to linked model. 
 Example:
 
     class Address extends Model {
@@ -152,14 +152,16 @@ Example:
         Integer age
         Date birthday
         String address
+        Long managerId
     
-        Worker(Sql sql, String firstName, String lastName, Integer age, Date birthday, String address) {
+        Worker(Sql sql, String firstName, String lastName, Integer age, Date birthday, String address, Long managerId) {
             super(sql)
             this.firstName = firstName
             this.lastName = lastName
             this.age = age
             this.birthday = birthday
             this.address = address
+            this.managerId = managerId
         }
     
         @Override
@@ -168,16 +170,20 @@ Example:
                     tableName: 'test_fk',
                     columns: [
                             lastName: new ColumnConfig(columnName: 'family_name'),
-                            address: new ColumnConfig(columnName: 'address_id', foreignKey: new ForeignKey(dest: Address, destColumnName: 'country'))
+                            address: new ColumnConfig(columnName: 'address_id', foreignKey: new ForeignKey(dest: Address, destColumnName: 'country')),
+                            managerId: new ColumnConfig(foreignKey: new ForeignKey(dest: Worker, getterName: 'getManager'))
                     ]
             )
         }
     }
     
     Address address = new Address(sql, 'Germany', 'Berlin', 'Schroderstrasse', 11).insert()
-    Worker worker = new Worker(sql, 'John', 'Doe', 30, null, 'Germany').insert()
+    Worker manager = new Worker(sql, 'Rick', 'Jackson', 50, null, 'Germany', null).insert()
+    Worker worker = new Worker(sql, 'John', 'Doe', 30, null, 'Germany', manager).insert()
     assert worker.getAddress() == 'Germany'
     assert worker.getAddressModel().id == address.id
+    assert worker.getManagerId() == manager.id
+    assert worker.getManager().firstName == 'Rick'
 
 ##### Config
 
@@ -198,3 +204,5 @@ ForeignKey
 dest - destination table Model class 
 
 destColumnName - column name of destination table (default: id)
+
+getterName - override getter name
